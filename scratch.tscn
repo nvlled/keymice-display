@@ -1,0 +1,46 @@
+[gd_scene load_steps=6 format=3 uid="uid://darffjd78loka"]
+
+[ext_resource type="Script" path="res://Scratch.cs" id="1_5gt77"]
+[ext_resource type="AudioStream" uid="uid://yde6c03gctm8" path="res://AudioTyping/keypress-006.wav" id="2_ldqjh"]
+[ext_resource type="AudioStream" uid="uid://cko8qtd1poj2t" path="res://AudioTyping/keypress-003.wav" id="3_3stip"]
+[ext_resource type="AudioStream" uid="uid://b5de3lmqt2rwm" path="res://AudioMisc/whoopee_2.wav" id="4_el5tk"]
+
+[sub_resource type="Theme" id="Theme_7q0vr"]
+default_font_size = 32
+
+[node name="Scratch" type="MarginContainer"]
+clip_contents = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_7q0vr")
+script = ExtResource("1_5gt77")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 2
+color = Color(0, 0.0612154, 0.226562, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="TypedLabels" type="FlowContainer" parent="MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+alignment = 1
+vertical = true
+
+[node name="TypeAudio1" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("2_ldqjh")
+
+[node name="TypeAudio2" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_3stip")
+
+[node name="TypeAudio3" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_el5tk")

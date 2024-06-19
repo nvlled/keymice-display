@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://bupqivwbyefge"]
+
+[ext_resource type="Script" path="res://typed_char.cs" id="1_ucxea"]
+
+[node name="TypedChar" type="PanelContainer"]
+offset_right = 44.0
+offset_bottom = 36.0
+script = ExtResource("1_ucxea")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "A"
