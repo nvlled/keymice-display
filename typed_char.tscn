@@ -1,15 +1,60 @@
-[gd_scene load_steps=2 format=3 uid="uid://bupqivwbyefge"]
+[gd_scene load_steps=3 format=3 uid="uid://bupqivwbyefge"]
 
 [ext_resource type="Script" path="res://typed_char.cs" id="1_ucxea"]
+[ext_resource type="Texture2D" uid="uid://bfie5cj3gg3av" path="res://Images/mouse-left.png" id="2_obmdy"]
 
 [node name="TypedChar" type="PanelContainer"]
-offset_right = 44.0
-offset_bottom = 36.0
+self_modulate = Color(0, 1, 0.282249, 1)
+offset_right = 68.0
+offset_bottom = 45.0
 script = ExtResource("1_ucxea")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
-[node name="Label" type="Label" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+alignment = 1
+
+[node name="Ctrl" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+modulate = Color(1, 0.817712, 0.418664, 1)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "A"
+theme_override_font_sizes/font_size = 12
+text = "CTRL"
+
+[node name="Alt" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+modulate = Color(1, 0.93321, 0.351515, 1)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 12
+text = "ALT"
+
+[node name="Shift" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+modulate = Color(0.834383, 1, 0.336719, 1)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 12
+text = "SHIFT"
+
+[node name="Key" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "X"
+
+[node name="BoxContainer" type="BoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="HBoxContainer/BoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_obmdy")
+expand_mode = 1
+stretch_mode = 4

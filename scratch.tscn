@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://darffjd78loka"]
+[gd_scene load_steps=7 format=3 uid="uid://darffjd78loka"]
 
 [ext_resource type="Script" path="res://Scratch.cs" id="1_5gt77"]
 [ext_resource type="AudioStream" uid="uid://yde6c03gctm8" path="res://AudioTyping/keypress-006.wav" id="2_ldqjh"]
 [ext_resource type="AudioStream" uid="uid://cko8qtd1poj2t" path="res://AudioTyping/keypress-003.wav" id="3_3stip"]
 [ext_resource type="AudioStream" uid="uid://b5de3lmqt2rwm" path="res://AudioMisc/whoopee_2.wav" id="4_el5tk"]
+[ext_resource type="PackedScene" uid="uid://dt0oei2phhwud" path="res://settings.tscn" id="5_yl4ff"]
 
 [sub_resource type="Theme" id="Theme_7q0vr"]
 default_font_size = 32
@@ -20,20 +21,19 @@ script = ExtResource("1_5gt77")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 2
-color = Color(0, 0.0612154, 0.226562, 1)
+color = Color(0, 0.0627451, 0.227451, 0.172549)
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 clip_contents = true
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 8
 size_flags_vertical = 4
 
 [node name="TypedLabels" type="FlowContainer" parent="MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 4
 size_flags_vertical = 4
-alignment = 1
+alignment = 2
 vertical = true
 
 [node name="TypeAudio1" type="AudioStreamPlayer2D" parent="."]
@@ -44,3 +44,6 @@ stream = ExtResource("3_3stip")
 
 [node name="TypeAudio3" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_el5tk")
+
+[node name="Window" parent="." instance=ExtResource("5_yl4ff")]
+visible = false

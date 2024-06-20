@@ -1,11 +1,17 @@
 using Godot;
-using System;
-using System.Security;
+using SharpHook.Native;
+using godot_getnode;
+
 
 public partial class typed_char : PanelContainer
 {
 
-    private Label _label;
+    [GetNode("%Ctrl")] Label _ctrl;
+    [GetNode("%Alt")] Label _alt;
+    [GetNode("%Shift")] Label _shift;
+    [GetNode("%Key")] Label _key;
+    [GetNode("%Icon")] TextureRect _icon;
+
 
     [Export]
     public bool _isControl = false;
@@ -15,12 +21,29 @@ public partial class typed_char : PanelContainer
 
     public string Text
     {
-        get => _label.Text ?? "";
+        get => _key.Text ?? "";
         set
         {
-            _label.Text = value;
+            _key.Text = value;
         }
     }
+
+    public override void _Ready()
+    {
+        this.GetAnnotatedNodes();
+        _ctrl.Visible = false;
+        _alt.Visible = false;
+        _shift.Visible = false;
+        _icon.Visible = false;
+
+        _key.Text = "";
+
+        var timer = GetTree().CreateTimer((1));
+        timer.TimeLeft = Duration;
+        timer.Timeout += OnTimeout;
+    }
+
+
     public bool IsControl
     {
         get => _isControl;
@@ -30,23 +53,30 @@ public partial class typed_char : PanelContainer
             if (_isControl)
             {
                 Modulate = new Color(1, 1, 1, 1.0f);
-                _label.Modulate = new Color(1, 0, 0, 1);
+                _key.Modulate = new Color(1, 0, 0, 1);
             }
             else
             {
                 Modulate = new Color(1, 1, 1, 0.0f);
-                _label.Modulate = new Color(1, 1, 1, 1);
+                _key.Modulate = new Color(1, 1, 1, 1);
             }
         }
     }
 
-    public override void _Ready()
+    public void SetIcon(Texture2D texture)
     {
-        _label = GetNode<Label>("Label");
+        _icon.Texture = texture;
+    }
 
-        var timer = GetTree().CreateTimer((1));
-        timer.TimeLeft = Duration;
-        timer.Timeout += OnTimeout;
+
+    public void SetModifierMask(ModifierMask mask, bool includeShift = false)
+    {
+        if ((mask & ModifierMask.Ctrl) != 0)
+            _ctrl.Visible = true;
+        if ((mask & ModifierMask.Alt) != 0)
+            _alt.Visible = true;
+        if (includeShift && (mask & ModifierMask.Shift) != 0)
+            _shift.Visible = true;
     }
 
     private void OnTimeout()

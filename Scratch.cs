@@ -1,19 +1,27 @@
 using System;
 using Godot;
+using godot_getnode;
 using SharpHook;
 using SharpHook.Native;
+using MB = SharpHook.Native.MouseButton;
 
 // TODO: cleanup and commit
 //       - rename scene and script names
 // TODO: review and audit SharpHook
+// TODO: settings window
 
 public partial class Scratch : Control
 {
-    private AudioStreamPlayer2D typeAudio1;
-    public AudioStreamPlayer2D typeAudio2;
-    public AudioStreamPlayer2D typeAudio3;
+    [GetNode("%TypedLabels")] private Control typedLabels;
+    [GetNode("TypeAudio1")] private AudioStreamPlayer2D typeAudio1;
+    [GetNode("TypeAudio2")] public AudioStreamPlayer2D typeAudio2;
+    [GetNode("TypeAudio3")] public AudioStreamPlayer2D typeAudio3;
 
-    private Control typedLabels;
+    public Texture2D iconMbLeft = GD.Load<Texture2D>("res://Images/mouse-left.png");
+    public Texture2D iconMbRight = GD.Load<Texture2D>("res://Images/mouse-right.png");
+    public Texture2D iconMbMid = GD.Load<Texture2D>("res://Images/mouse-mid.png");
+    public Texture2D iconMbAny = GD.Load<Texture2D>("res://Images/mouse.png");
+
 
     PackedScene _labelScene = GD.Load<PackedScene>("res://typed_char.tscn");
 
@@ -22,10 +30,7 @@ public partial class Scratch : Control
 
     public override void _Ready()
     {
-        typedLabels = GetNode<Control>("%TypedLabels");
-        typeAudio1 = GetNode<AudioStreamPlayer2D>("TypeAudio1");
-        typeAudio2 = GetNode<AudioStreamPlayer2D>("TypeAudio2");
-        typeAudio3 = GetNode<AudioStreamPlayer2D>("TypeAudio3");
+        this.GetAnnotatedNodes();
 
         var hook = new TaskPoolGlobalHook(1, GlobalHookType.All);
         hook.KeyPressed += OnKeyPressed;
@@ -34,63 +39,61 @@ public partial class Scratch : Control
         hook.MousePressed += OnMouseClicked;
         hook.RunAsync();
 
-        //GetViewport().TransparentBg = true;
+        GetViewport().TransparentBg = true;
 
         var scrSize = DisplayServer.ScreenGetSize();
         var winSize = DisplayServer.WindowGetSize();
-        DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X, scrSize.Y - winSize.Y - 50));
+        DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X - 20, scrSize.Y - winSize.Y - 40));
+        DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.MousePassthrough, true);
     }
+
 
     private void OnMouseClicked(object sender, MouseHookEventArgs e)
     {
+        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
-            AppendMaskLabels(e.RawEvent.Mask);
             var label = _labelScene.Instantiate<typed_char>();
             typedLabels.AddChild(label);
             label.IsControl = true;
-            label.Text = e.Data.Button switch
+            switch (e.Data.Button)
             {
-                SharpHook.Native.MouseButton.Button1 => "🖱️L",
-                SharpHook.Native.MouseButton.Button2 => "🖱️R",
-                SharpHook.Native.MouseButton.Button3 => "🖱️M",
-                _ => "🖱️",
-            };
+                case MB.Button1: label.SetIcon(iconMbLeft); break;
+                case MB.Button2: label.SetIcon(iconMbRight); break;
+                case MB.Button3: label.SetIcon(iconMbMid); break;
+                default:
+                    label.SetIcon(iconMbAny); break;
+            }
+            label.SetModifierMask(mask, includeShift: true);
+
         }).CallDeferred();
-        GD.PrintT("click", e.Data.Button, e.Data.Clicks);
+
     }
 
     private void OnKeyTyped(object sender, KeyboardHookEventArgs e)
     {
         var data = e.Data;
-        var mask = e.RawEvent.Mask;
+        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
 
         if (char.IsControl((char)data.KeyCode)) return;
 
         Callable.From(() =>
         {
-            AppendMaskLabels(e.RawEvent.Mask);
             var label = _labelScene.Instantiate<typed_char>();
             typedLabels.AddChild(label);
             if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
                 label.Text = ((char)data.RawCode).ToString();
             else
                 label.Text = ((char)data.KeyChar).ToString();
+            label.SetModifierMask(mask);
             typeAudio1.Play();
         }).CallDeferred();
-    }
-
-    private void OnKeyReleased(object sender, KeyboardHookEventArgs e)
-    {
-        if (e.Data.KeyCode == KeyCode.VcCapsLock)
-        {
-            capslockDown = false;
-        }
     }
 
     private void OnKeyPressed(object sender, KeyboardHookEventArgs e)
     {
         var data = e.Data;
+        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
 
         switch (data.KeyCode)
         {
@@ -156,15 +159,15 @@ public partial class Scratch : Control
 
         Callable.From(() =>
         {
-            AppendMaskLabels(e.RawEvent.Mask, includeShift: true);
             typeAudio2.Play();
 
             var label = _labelScene.Instantiate<typed_char>();
-            var code = e.Data.KeyCode;
             typedLabels.AddChild(label);
             label.IsControl = true;
+            label.SetModifierMask(mask, includeShift: true);
 
             // symbol mapping based on http://xahlee.info/comp/unicode_computing_symbols.html
+            var code = e.Data.KeyCode;
             switch (code)
             {
                 case KeyCode.VcEnter:
@@ -221,102 +224,22 @@ public partial class Scratch : Control
         }).CallDeferred();
     }
 
-    private void AppendMaskLabels(ModifierMask mask, bool includeShift = false)
+    private ModifierMask SetCtrlCapsMask(ModifierMask mask)
     {
-
-        typed_char label;
-        if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
+        if (capsAsCtrl && capslockDown)
         {
-            label = _labelScene.Instantiate<typed_char>();
-            typedLabels.AddChild(label);
-            label.Text = "✲";
-            label.IsControl = true;
+            return mask | ModifierMask.Ctrl;
         }
-        if ((mask & ModifierMask.Alt) != 0)
-        {
-            label = _labelScene.Instantiate<typed_char>();
-            typedLabels.AddChild(label);
-            label.Text = "⎇";
-            label.IsControl = true;
-        }
-        if (includeShift && (mask & ModifierMask.Shift) != 0)
-        {
-            label = _labelScene.Instantiate<typed_char>();
-            typedLabels.AddChild(label);
-            label.Text = "Shift";
-            label.IsControl = true;
-        }
+        return mask;
     }
 
 
-    public override void _Process(double delta)
+    private void OnKeyReleased(object sender, KeyboardHookEventArgs e)
     {
-        base._Process(delta);
-
-        //if (!keyEvents.TryDequeue(out data))
-        //{
-        //    return;
-        //}
-
-        ////GD.PrintT("key typed", data.KeyChar, data.KeyCode, data.KeyCode.ToString());
-
-
-        //var label = new typed_char();
-
-        //if (char.IsLetterOrDigit(data.KeyChar))
-        //{
-        //    label.Text = char.ToUpper(data.KeyChar).ToString();
-        //}
-        //else
-        //{
-        //    label.Text = data.KeyCode.ToString();
-        //    label.IsControl = true;
-        //    switch (data.KeyCode)
-        //    {
-        //        case KeyCode.VcEnter: label.Text = "⏎"; break;
-
-        //        case KeyCode.VcLeftAlt:
-        //        case KeyCode.VcRightAlt:
-        //            label.Text = "⎇Alt";
-        //            break;
-
-        //        case KeyCode.VcLeftShift:
-        //        case KeyCode.VcRightShift:
-        //            label.Text = "⇧Shift";
-        //            break;
-        //    }
-        //}
-        //typedLabels.AddChild(label);
-    }
-
-
-    /*
-    private void onFilesDropped(string[] files)
-    {
-        GD.PrintT("files dropped", files[0]);
-    }
-
-    public static void Run(string filePath)
-    {
-        using (EpubBookRef bookRef = EpubReader.OpenBook(filePath))
+        if (e.Data.KeyCode == KeyCode.VcCapsLock)
         {
-            Console.WriteLine("Navigation:");
-            foreach (EpubNavigationItemRef navigationItemRef in bookRef.GetNavigation())
-            {
-                PrintNavigationItem(navigationItemRef, 0);
-            }
-        }
-        Console.WriteLine();
-    }
-
-    private static void PrintNavigationItem(EpubNavigationItemRef navigationItemRef, int identLevel)
-    {
-        Console.Write(new string(' ', identLevel * 2));
-        Console.WriteLine(navigationItemRef.Title);
-        foreach (EpubNavigationItemRef nestedNavigationItemRef in navigationItemRef.NestedItems)
-        {
-            PrintNavigationItem(nestedNavigationItemRef, identLevel + 1);
+            capslockDown = false;
         }
     }
-    */
+
 }
