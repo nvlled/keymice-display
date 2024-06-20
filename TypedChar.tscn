@@ -1,13 +1,13 @@
 [gd_scene load_steps=3 format=3 uid="uid://bupqivwbyefge"]
 
-[ext_resource type="Script" path="res://typed_char.cs" id="1_ucxea"]
-[ext_resource type="Texture2D" uid="uid://bfie5cj3gg3av" path="res://Images/mouse-left.png" id="2_obmdy"]
+[ext_resource type="Script" path="res://TypedChar.cs" id="1_4oqmd"]
+[ext_resource type="Texture2D" uid="uid://bfie5cj3gg3av" path="res://Images/mouse-left.png" id="2_326pj"]
 
 [node name="TypedChar" type="PanelContainer"]
 self_modulate = Color(0, 1, 0.282249, 1)
 offset_right = 68.0
 offset_bottom = 45.0
-script = ExtResource("1_ucxea")
+script = ExtResource("1_4oqmd")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
@@ -46,15 +46,12 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "X"
 
+[node name="Icon" type="TextureRect" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture = ExtResource("2_326pj")
+expand_mode = 3
+stretch_mode = 4
+
 [node name="BoxContainer" type="BoxContainer" parent="HBoxContainer"]
 layout_mode = 2
-
-[node name="Icon" type="TextureRect" parent="HBoxContainer/BoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-texture = ExtResource("2_obmdy")
-expand_mode = 1
-stretch_mode = 4

@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://dt0oei2phhwud"]
+
+[sub_resource type="Theme" id="Theme_2n607"]
+
+[node name="Window" type="Window"]
+initial_position = 1
+size = Vector2i(400, 400)
+popup_window = true
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_2n607")
+
+[node name="CenterContainer" type="CenterContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/CenterContainer"]
+layout_mode = 2
+text = "testing"

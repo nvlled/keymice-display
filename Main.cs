@@ -5,17 +5,17 @@ using SharpHook;
 using SharpHook.Native;
 using MB = SharpHook.Native.MouseButton;
 
-// TODO: cleanup and commit
+// TODO: show mouse scroll, not my thumb button
+// TODO:  commit and push
 //       - rename scene and script names
 // TODO: review and audit SharpHook
 // TODO: settings window
 
-public partial class Scratch : Control
+public partial class Main : Control
 {
     [GetNode("%TypedLabels")] private Control typedLabels;
     [GetNode("TypeAudio1")] private AudioStreamPlayer2D typeAudio1;
     [GetNode("TypeAudio2")] public AudioStreamPlayer2D typeAudio2;
-    [GetNode("TypeAudio3")] public AudioStreamPlayer2D typeAudio3;
 
     public Texture2D iconMbLeft = GD.Load<Texture2D>("res://Images/mouse-left.png");
     public Texture2D iconMbRight = GD.Load<Texture2D>("res://Images/mouse-right.png");
@@ -23,7 +23,7 @@ public partial class Scratch : Control
     public Texture2D iconMbAny = GD.Load<Texture2D>("res://Images/mouse.png");
 
 
-    PackedScene _labelScene = GD.Load<PackedScene>("res://typed_char.tscn");
+    PackedScene _labelScene = GD.Load<PackedScene>("res://TypedChar.tscn");
 
     private bool capsAsCtrl = true;
     private bool capslockDown = false;
@@ -53,7 +53,7 @@ public partial class Scratch : Control
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
-            var label = _labelScene.Instantiate<typed_char>();
+            var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
             label.IsControl = true;
             switch (e.Data.Button)
@@ -79,7 +79,7 @@ public partial class Scratch : Control
 
         Callable.From(() =>
         {
-            var label = _labelScene.Instantiate<typed_char>();
+            var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
             if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
                 label.Text = ((char)data.RawCode).ToString();
@@ -161,7 +161,7 @@ public partial class Scratch : Control
         {
             typeAudio2.Play();
 
-            var label = _labelScene.Instantiate<typed_char>();
+            var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
             label.IsControl = true;
             label.SetModifierMask(mask, includeShift: true);

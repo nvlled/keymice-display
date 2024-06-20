@@ -3,7 +3,7 @@ using SharpHook.Native;
 using godot_getnode;
 
 
-public partial class typed_char : PanelContainer
+public partial class TypedChar : PanelContainer
 {
 
     [GetNode("%Ctrl")] Label _ctrl;
@@ -66,6 +66,7 @@ public partial class typed_char : PanelContainer
     public void SetIcon(Texture2D texture)
     {
         _icon.Texture = texture;
+        _icon.Visible = true;
     }
 
 
