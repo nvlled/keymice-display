@@ -5,9 +5,10 @@ using SharpHook;
 using SharpHook.Native;
 using MB = SharpHook.Native.MouseButton;
 
-// TODO: show mouse scroll, not my thumb button
-// TODO:  commit and push
-//       - rename scene and script names
+
+// TODO: ctrl+num doesn't work on widows
+// TODO: passthrough also doesn't work
+//
 // TODO: review and audit SharpHook
 // TODO: settings window
 
@@ -37,19 +38,40 @@ public partial class Main : Control
         hook.KeyReleased += OnKeyReleased;
         hook.KeyTyped += OnKeyTyped;
         hook.MousePressed += OnMouseClicked;
+        hook.MouseWheel += OnMouseWheel;
         hook.RunAsync();
 
         GetViewport().TransparentBg = true;
 
-        var scrSize = DisplayServer.ScreenGetSize();
-        var winSize = DisplayServer.WindowGetSize();
-        DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X - 20, scrSize.Y - winSize.Y - 40));
-        DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.MousePassthrough, true);
+        Callable.From(() =>
+        {
+            var scrSize = DisplayServer.ScreenGetSize();
+            var winSize = DisplayServer.WindowGetSize();
+            DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X - 20, scrSize.Y - winSize.Y - 40));
+            var win = GetWindow();
+            win.Unfocusable = false;
+        }).CallDeferred();
     }
 
+    private void OnMouseWheel(object sender, MouseWheelHookEventArgs e)
+    {
+        GD.PrintT("wheel", e.Data);
+        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
+        Callable.From(() =>
+        {
+            var label = _labelScene.Instantiate<TypedChar>();
+            typedLabels.AddChild(label);
+            label.IsFunction = true;
+            label.SetIcon(iconMbAny);
+            label.Text = e.Data.Rotation > 0 ? "↑" : "↓";
+            label.SetModifierMask(mask, includeShift: true);
+
+        }).CallDeferred();
+    }
 
     private void OnMouseClicked(object sender, MouseHookEventArgs e)
     {
+        GD.PrintT("mouse", e.Data);
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
@@ -66,8 +88,26 @@ public partial class Main : Control
             }
             label.SetModifierMask(mask, includeShift: true);
 
-        }).CallDeferred();
+            /*
+            // TODO: if click coordinates contains window, show border and toggle unfocusable
+            // - changing window properties doesn't seem to have any effect on linux
+            var data = e.Data;
+            var win = GetWindow();
+            if (
+                data.X > win.Position.X && data.X < win.Position.X + win.Size.X &&
+                data.Y > win.Position.Y && data.Y < win.Position.Y + win.Size.Y)
+            {
+                GD.PrintT("window click");
+                DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.NoFocus, false);
+                DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
+                win.Unfocusable = false;
+                win.Borderless = false;
+                win.AlwaysOnTop = false;
+                win.AlwaysOnTop = false;
+            }
+            */
 
+        }).CallDeferred();
     }
 
     private void OnKeyTyped(object sender, KeyboardHookEventArgs e)
@@ -75,6 +115,8 @@ public partial class Main : Control
         var data = e.Data;
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         var ch = (char)data.KeyCode;
+
+        GD.PrintT("typed", data);
 
         if (char.IsControl(ch) || ch == ' ') return;
 
@@ -95,6 +137,7 @@ public partial class Main : Control
     {
         var data = e.Data;
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
+        GD.PrintT("pressed", data);
 
         switch (data.KeyCode)
         {
