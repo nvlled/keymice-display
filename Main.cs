@@ -55,7 +55,7 @@ public partial class Main : Control
         {
             var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
-            label.IsControl = true;
+            label.IsFunction = true;
             switch (e.Data.Button)
             {
                 case MB.Button1: label.SetIcon(iconMbLeft); break;
@@ -74,8 +74,9 @@ public partial class Main : Control
     {
         var data = e.Data;
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
+        var ch = (char)data.KeyCode;
 
-        if (char.IsControl((char)data.KeyCode)) return;
+        if (char.IsControl(ch) || ch == ' ') return;
 
         Callable.From(() =>
         {
@@ -163,7 +164,7 @@ public partial class Main : Control
 
             var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
-            label.IsControl = true;
+            label.IsFunction = true;
             label.SetModifierMask(mask, includeShift: true);
 
             // symbol mapping based on http://xahlee.info/comp/unicode_computing_symbols.html
@@ -174,19 +175,19 @@ public partial class Main : Control
                     label.Text = "⏎";
                     break;
                 case KeyCode.VcPageUp:
-                    label.Text = "▲";
+                    label.Text = "PgUp";
                     break;
                 case KeyCode.VcPageDown:
-                    label.Text = "▼";
+                    label.Text = "PgDown";
                     break;
                 case KeyCode.VcHome:
-                    label.Text = "⤒";
+                    label.Text = "Home";
                     break;
                 case KeyCode.VcEnd:
-                    label.Text = "⤓";
+                    label.Text = "End";
                     break;
                 case KeyCode.VcEscape:
-                    label.Text = "⎋";
+                    label.Text = "Esc";
                     break;
                 case KeyCode.VcBackspace:
                     label.Text = "⌫";
@@ -198,7 +199,7 @@ public partial class Main : Control
                     label.Text = "␣";
                     break;
                 case KeyCode.VcInsert:
-                    label.Text = "⎀";
+                    label.Text = "Insert";
                     break;
                 case KeyCode.VcPrintScreen:
                     label.Text = "⎙";

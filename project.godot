@@ -10,7 +10,8 @@ config_version=5
 
 [application]
 
-config/name="keypress-ui"
+config/name="keymice-display"
+config/description="A program to display user key presses and mouse clicks"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.2", "C#", "GL Compatibility")
 config/icon="res://icon.svg"

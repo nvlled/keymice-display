@@ -10,21 +10,31 @@ public partial class TypedChar : PanelContainer
     [GetNode("%Alt")] Label _alt;
     [GetNode("%Shift")] Label _shift;
     [GetNode("%Key")] Label _key;
+    [GetNode("%KeyFn")] Label _keyFn;
     [GetNode("%Icon")] TextureRect _icon;
 
 
     [Export]
-    public bool _isControl = false;
+    public bool _isFunction = false;
 
     [Export]
     public double Duration = 2;
 
     public string Text
     {
-        get => _key.Text ?? "";
+        get => _key.Text ?? _keyFn.Text ?? "";
         set
         {
-            _key.Text = value;
+            if (_isFunction)
+            {
+                _keyFn.Text = value;
+                _key.Text = "";
+            }
+            else
+            {
+                _key.Text = value;
+                _keyFn.Text = "";
+            }
         }
     }
 
@@ -36,6 +46,7 @@ public partial class TypedChar : PanelContainer
         _shift.Visible = false;
         _icon.Visible = false;
 
+        _keyFn.Text = "";
         _key.Text = "";
 
         var timer = GetTree().CreateTimer((1));
@@ -44,21 +55,19 @@ public partial class TypedChar : PanelContainer
     }
 
 
-    public bool IsControl
+    public bool IsFunction
     {
-        get => _isControl;
+        get => _isFunction;
         set
         {
-            _isControl = value;
-            if (_isControl)
+            _isFunction = value;
+            if (_isFunction)
             {
-                Modulate = new Color(1, 1, 1, 1.0f);
-                _key.Modulate = new Color(1, 0, 0, 1);
+                _key.Text = "";
             }
             else
             {
-                Modulate = new Color(1, 1, 1, 0.0f);
-                _key.Modulate = new Color(1, 1, 1, 1);
+                _keyFn.Text = "";
             }
         }
     }
