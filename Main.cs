@@ -33,6 +33,9 @@ public partial class Main : Control
     {
         this.GetAnnotatedNodes();
 
+        PhysicsServer2D.SetActive(false);
+        PhysicsServer3D.SetActive(false);
+
         var hook = new TaskPoolGlobalHook(1, GlobalHookType.All);
         hook.KeyPressed += OnKeyPressed;
         hook.KeyReleased += OnKeyReleased;
