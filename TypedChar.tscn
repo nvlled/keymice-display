@@ -1,19 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://bupqivwbyefge"]
+[gd_scene load_steps=4 format=3 uid="uid://bupqivwbyefge"]
 
 [ext_resource type="Script" path="res://TypedChar.cs" id="1_4oqmd"]
 [ext_resource type="Texture2D" uid="uid://bfie5cj3gg3av" path="res://Images/mouse-left.png" id="2_326pj"]
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_8xbss"]
+
 [node name="TypedChar" type="PanelContainer"]
-self_modulate = Color(0, 1, 0.282249, 1)
 offset_right = 68.0
 offset_bottom = 45.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_8xbss")
 script = ExtResource("1_4oqmd")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
-size_flags_horizontal = 8
 size_flags_vertical = 4
 alignment = 1
 
@@ -24,6 +23,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 12
 text = "CTRL"
+horizontal_alignment = 1
 
 [node name="Alt" type="Label" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -32,6 +32,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 12
 text = "ALT"
+horizontal_alignment = 1
 
 [node name="Shift" type="Label" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -40,12 +41,14 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 12
 text = "SHIFT"
+horizontal_alignment = 1
 
 [node name="Key" type="Label" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 text = "X"
+horizontal_alignment = 1
 
 [node name="KeyFn" type="Label" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -55,6 +58,7 @@ size_flags_horizontal = 4
 theme_override_colors/font_shadow_color = Color(0, 0.874845, 1, 1)
 theme_override_font_sizes/font_size = 16
 text = "F1"
+horizontal_alignment = 1
 
 [node name="Icon" type="TextureRect" parent="HBoxContainer"]
 unique_name_in_owner = true
@@ -63,5 +67,9 @@ texture = ExtResource("2_326pj")
 expand_mode = 3
 stretch_mode = 4
 
-[node name="BoxContainer" type="BoxContainer" parent="HBoxContainer"]
+[node name="Counter" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.897606, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "x2"

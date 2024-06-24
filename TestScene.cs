@@ -1,7 +1,5 @@
 using Godot;
-using System;
 using godot_getnode;
-
 
 
 public partial class TestScene : Control

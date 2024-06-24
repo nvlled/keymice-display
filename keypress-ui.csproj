@@ -5,9 +5,13 @@
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>keypressui</RootNamespace>
+    <PublishAOT>true</PublishAOT>
+    <Configuration>Release</Configuration>
+    <OptimizationPreference>Size</OptimizationPreference>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpHook" Version="5.3.6" />
-    <PackageReference Include="VersOne.Epub" Version="3.3.2" />
+    <TrimmerRootAssembly Include="GodotSharp" />
+    <TrimmerRootAssembly Include="$(TargetName)" />
   </ItemGroup>
 </Project>

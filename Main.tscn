@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://darffjd78loka"]
+[gd_scene load_steps=7 format=3 uid="uid://darffjd78loka"]
 
 [ext_resource type="Script" path="res://Main.cs" id="1_pn35k"]
 [ext_resource type="AudioStream" uid="uid://yde6c03gctm8" path="res://AudioTyping/keypress-006.wav" id="2_bbhrc"]
-[ext_resource type="AudioStream" uid="uid://cko8qtd1poj2t" path="res://AudioTyping/keypress-003.wav" id="3_aaar3"]
+[ext_resource type="AudioStream" uid="uid://bf4rgi3vkg5h5" path="res://AudioTyping/keypress-022.wav" id="3_xc84i"]
+[ext_resource type="AudioStream" uid="uid://djfyimmovtru7" path="res://AudioTyping/keypress-020.wav" id="4_lpu1x"]
 [ext_resource type="PackedScene" uid="uid://dt0oei2phhwud" path="res://settings.tscn" id="5_wk4ol"]
 
 [sub_resource type="Theme" id="Theme_7q0vr"]
@@ -26,20 +27,23 @@ color = Color(0, 0.136846, 0.258824, 0.796078)
 clip_contents = true
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_right = 10
 
 [node name="TypedLabels" type="FlowContainer" parent="MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 8
 size_flags_vertical = 4
+alignment = 1
 vertical = true
 
 [node name="TypeAudio1" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("2_bbhrc")
 
 [node name="TypeAudio2" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("3_aaar3")
+stream = ExtResource("3_xc84i")
+
+[node name="TypeAudio3" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_lpu1x")
 
 [node name="Window" parent="." instance=ExtResource("5_wk4ol")]
 visible = false

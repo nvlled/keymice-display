@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 using godot_getnode;
 using SharpHook;
@@ -17,6 +19,7 @@ public partial class Main : Control
     [GetNode("%TypedLabels")] private Control typedLabels;
     [GetNode("TypeAudio1")] private AudioStreamPlayer2D typeAudio1;
     [GetNode("TypeAudio2")] public AudioStreamPlayer2D typeAudio2;
+    [GetNode("TypeAudio3")] public AudioStreamPlayer2D typeAudio3;
 
     public Texture2D iconMbLeft = GD.Load<Texture2D>("res://Images/mouse-left.png");
     public Texture2D iconMbRight = GD.Load<Texture2D>("res://Images/mouse-right.png");
@@ -25,9 +28,11 @@ public partial class Main : Control
 
 
     PackedScene _labelScene = GD.Load<PackedScene>("res://TypedChar.tscn");
-
     private bool capsAsCtrl = true;
     private bool capslockDown = false;
+    private long lastWheelFrame = 0;
+
+    private readonly Queue<KeyboardHookEventArgs> queue = new();
 
     public override void _Ready()
     {
@@ -56,9 +61,57 @@ public partial class Main : Control
         }).CallDeferred();
     }
 
+    public override void _Process(double delta)
+    {
+        if (queue.TryDequeue(out KeyboardHookEventArgs e))
+        {
+            var data = e.Data;
+            var mask = SetCtrlCapsMask(e.RawEvent.Mask);
+
+            var lastChild = GetLastChild();
+            if (lastChild is not null && lastChild.keyData == data)
+            {
+                lastChild.Count += 1;
+
+                if (!IsFunctionKey(data.KeyCode)) typeAudio1.Play();
+                else typeAudio2.Play();
+            }
+            else if (!IsFunctionKey(data.KeyCode))
+            {
+                var label = _labelScene.Instantiate<TypedChar>();
+                typedLabels.AddChild(label);
+                if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
+                    label.Text = ((char)data.RawCode).ToString();
+                else
+                    label.Text = data.KeyChar.ToString();
+                label.SetModifierMask(mask);
+                label.keyData = data;
+                typeAudio1.Play();
+            }
+            else
+            {
+                var label = _labelScene.Instantiate<TypedChar>();
+                typedLabels.AddChild(label);
+                label.IsFunction = true;
+                label.Text = GetFunctionKeyText(data.KeyCode);
+                label.keyData = data;
+                label.SetModifierMask(mask, includeShift: true);
+                typeAudio2.Play();
+            }
+
+            RemoveOlderItems();
+        };
+    }
+
     private void OnMouseWheel(object sender, MouseWheelHookEventArgs e)
     {
-        GD.PrintT("wheel", e.Data);
+        var frame = GetTree().GetFrame();
+        if (frame - lastWheelFrame < 30)
+        {
+            return;
+        }
+        lastWheelFrame = frame;
+
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
@@ -68,16 +121,19 @@ public partial class Main : Control
             label.SetIcon(iconMbAny);
             label.Text = e.Data.Rotation > 0 ? "↑" : "↓";
             label.SetModifierMask(mask, includeShift: true);
-
         }).CallDeferred();
     }
 
     private void OnMouseClicked(object sender, MouseHookEventArgs e)
     {
-        GD.PrintT("mouse", e.Data);
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
+            if (e.Data.Button > MB.Button5 || e.Data.Button < MB.Button1)
+            {
+                return;
+            }
+
             var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
             label.IsFunction = true;
@@ -90,6 +146,7 @@ public partial class Main : Control
                     label.SetIcon(iconMbAny); break;
             }
             label.SetModifierMask(mask, includeShift: true);
+            typeAudio3.Play();
 
             /*
             // TODO: if click coordinates contains window, show border and toggle unfocusable
@@ -116,159 +173,109 @@ public partial class Main : Control
     private void OnKeyTyped(object sender, KeyboardHookEventArgs e)
     {
         var data = e.Data;
-        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         var ch = (char)data.KeyCode;
 
-        GD.PrintT("typed", data);
+        if (!char.IsControl(ch) && ch != ' ')
+            queue.Enqueue(e);
+    }
 
-        if (char.IsControl(ch) || ch == ' ') return;
-
-        Callable.From(() =>
-        {
-            var label = _labelScene.Instantiate<TypedChar>();
-            typedLabels.AddChild(label);
-            if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
-                label.Text = ((char)data.RawCode).ToString();
-            else
-                label.Text = ((char)data.KeyChar).ToString();
-            label.SetModifierMask(mask);
-            typeAudio1.Play();
-        }).CallDeferred();
+    private TypedChar GetLastChild()
+    {
+        if (typedLabels.GetChildCount() == 0)
+            return null;
+        return typedLabels.GetChild(-1) as TypedChar;
     }
 
     private void OnKeyPressed(object sender, KeyboardHookEventArgs e)
     {
         var data = e.Data;
-        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
-        GD.PrintT("pressed", data);
 
-        switch (data.KeyCode)
+        if (data.KeyCode == KeyCode.VcCapsLock && capsAsCtrl)
         {
-            case KeyCode.VcLeftMeta:
-            case KeyCode.VcRightMeta:
-            case KeyCode.VcPrintScreen:
-            case KeyCode.VcScrollLock:
-            case KeyCode.VcPause:
-            case KeyCode.VcContextMenu:
-
-            case KeyCode.VcHome:
-            case KeyCode.VcEnd:
-            case KeyCode.VcInsert:
-            case KeyCode.VcDelete:
-            case KeyCode.VcPageDown:
-            case KeyCode.VcPageUp:
-
-            case KeyCode.VcEnter:
-            case KeyCode.VcEscape:
-            case KeyCode.VcBackspace:
-            case KeyCode.VcSpace:
-            case KeyCode.VcTab:
-
-            case KeyCode.VcUp:
-            case KeyCode.VcDown:
-            case KeyCode.VcLeft:
-            case KeyCode.VcRight:
-            case KeyCode.VcF1:
-            case KeyCode.VcF2:
-            case KeyCode.VcF3:
-            case KeyCode.VcF4:
-            case KeyCode.VcF5:
-            case KeyCode.VcF6:
-            case KeyCode.VcF7:
-            case KeyCode.VcF8:
-            case KeyCode.VcF9:
-            case KeyCode.VcF10:
-            case KeyCode.VcF11:
-            case KeyCode.VcF12:
-            case KeyCode.VcF13:
-            case KeyCode.VcF14:
-            case KeyCode.VcF15:
-            case KeyCode.VcF16:
-            case KeyCode.VcF17:
-            case KeyCode.VcF18:
-            case KeyCode.VcF19:
-            case KeyCode.VcF20:
-            case KeyCode.VcF21:
-            case KeyCode.VcF22:
-            case KeyCode.VcF23:
-            case KeyCode.VcF24:
-                break;
-
-            case KeyCode.VcCapsLock:
-                capslockDown = true;
-                return;
-
-            default:
-                if (!char.IsControl((char)data.KeyCode)) return;
-                break;
+            capslockDown = true;
+            return;
         }
 
-
-        Callable.From(() =>
+        if (IsFunctionKey(data.KeyCode))
         {
-            typeAudio2.Play();
+            queue.Enqueue(e);
+        }
+    }
 
-            var label = _labelScene.Instantiate<TypedChar>();
-            typedLabels.AddChild(label);
-            label.IsFunction = true;
-            label.SetModifierMask(mask, includeShift: true);
+    private bool IsFull()
+    {
+        return typedLabels.Size.X > GetWindow().Size.X;
+    }
 
-            // symbol mapping based on http://xahlee.info/comp/unicode_computing_symbols.html
-            var code = e.Data.KeyCode;
-            switch (code)
-            {
-                case KeyCode.VcEnter:
-                    label.Text = "⏎";
-                    break;
-                case KeyCode.VcPageUp:
-                    label.Text = "PgUp";
-                    break;
-                case KeyCode.VcPageDown:
-                    label.Text = "PgDown";
-                    break;
-                case KeyCode.VcHome:
-                    label.Text = "Home";
-                    break;
-                case KeyCode.VcEnd:
-                    label.Text = "End";
-                    break;
-                case KeyCode.VcEscape:
-                    label.Text = "Esc";
-                    break;
-                case KeyCode.VcBackspace:
-                    label.Text = "⌫";
-                    break;
-                case KeyCode.VcDelete:
-                    label.Text = "⌦";
-                    break;
-                case KeyCode.VcSpace:
-                    label.Text = "␣";
-                    break;
-                case KeyCode.VcInsert:
-                    label.Text = "Insert";
-                    break;
-                case KeyCode.VcPrintScreen:
-                    label.Text = "⎙";
-                    break;
-                case KeyCode.VcContextMenu:
-                    label.Text = "▤";
-                    break;
-                case KeyCode.VcRightMeta:
-                case KeyCode.VcLeftMeta:
-                    label.Text = "❖";
-                    break;
 
-                case KeyCode.VcUp: label.Text = "↑"; break;
-                case KeyCode.VcDown: label.Text = "↓"; break;
-                case KeyCode.VcLeft: label.Text = "←"; break;
-                case KeyCode.VcRight: label.Text = "→"; break;
+    private static string GetFunctionKeyText(KeyCode code)
+    {
+        // symbol mapping based on http://xahlee.info/comp/unicode_computing_symbols.html
+        switch (code)
+        {
+            case KeyCode.VcEnter:
+                return "⏎";
+            case KeyCode.VcPageUp:
+                return "PgUp";
+            case KeyCode.VcPageDown:
+                return "PgDown";
+            case KeyCode.VcHome:
+                return "Home";
+            case KeyCode.VcEnd:
+                return "End";
+            case KeyCode.VcEscape:
+                return "Esc";
+            case KeyCode.VcBackspace:
+                return "⌫";
+            case KeyCode.VcDelete:
+                return "⌦";
+            case KeyCode.VcSpace:
+                return "␣";
+            case KeyCode.VcInsert:
+                return "Insert";
+            case KeyCode.VcPrintScreen:
+                return "⎙";
+            case KeyCode.VcContextMenu:
+                return "▤";
+            case KeyCode.VcRightMeta:
+            case KeyCode.VcLeftMeta:
+                return "❖";
 
-                default:
-                    var s = code.ToString();
-                    label.Text = s.Substr(2, s.Length);
-                    break;
-            }
-        }).CallDeferred();
+            case KeyCode.VcUp: return "↑";
+            case KeyCode.VcDown: return "↓";
+            case KeyCode.VcLeft: return "←";
+            case KeyCode.VcRight: return "→";
+
+            default:
+                var s = code.ToString();
+                return s.Substr(2, s.Length);
+        }
+    }
+
+    private static bool IsFunctionKey(KeyCode code)
+    {
+        return code switch
+        {
+            KeyCode.VcLeftMeta or KeyCode.VcRightMeta or KeyCode.VcPrintScreen or KeyCode.VcScrollLock or
+            KeyCode.VcPause or KeyCode.VcContextMenu or
+            KeyCode.VcHome or KeyCode.VcEnd or KeyCode.VcInsert or KeyCode.VcDelete or KeyCode.VcPageDown or KeyCode.VcPageUp or
+            KeyCode.VcEnter or KeyCode.VcEscape or KeyCode.VcBackspace or KeyCode.VcSpace or KeyCode.VcTab or
+            KeyCode.VcUp or KeyCode.VcDown or KeyCode.VcLeft or KeyCode.VcRight or
+            KeyCode.VcF1 or KeyCode.VcF2 or KeyCode.VcF3 or KeyCode.VcF4 or KeyCode.VcF5 or KeyCode.VcF6 or KeyCode.VcF7 or
+            KeyCode.VcF8 or KeyCode.VcF9 or KeyCode.VcF10 or KeyCode.VcF11 or KeyCode.VcF12 or KeyCode.VcF13 or KeyCode.VcF14 or
+            KeyCode.VcF15 or KeyCode.VcF16 or KeyCode.VcF17 or KeyCode.VcF18 or KeyCode.VcF19 or KeyCode.VcF20 or KeyCode.VcF21 or
+            KeyCode.VcF22 or KeyCode.VcF23 or KeyCode.VcF24 or KeyCode.VcCapsLock => true,
+            _ => char.IsControl((char)code),
+        };
+    }
+
+    private void RemoveOlderItems()
+    {
+        for (var i = 0; IsFull() && i < 3; i++)
+        {
+            var child = typedLabels.GetChild(0);
+            typedLabels.RemoveChild(child);
+        }
     }
 
     private ModifierMask SetCtrlCapsMask(ModifierMask mask)
