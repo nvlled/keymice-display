@@ -14,6 +14,7 @@ config/name="keymice-display"
 config/description="A program to display user key presses and mouse clicks"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.2", "C#", "GL Compatibility")
+run/max_fps=30
 run/low_processor_mode=true
 config/icon="res://icon.svg"
 
@@ -22,6 +23,7 @@ config/icon="res://icon.svg"
 window/size/viewport_width=350
 window/size/viewport_height=80
 window/size/initial_position_type=0
+window/size/borderless=true
 window/size/always_on_top=true
 window/energy_saving/keep_screen_on=false
 window/subwindows/embed_subwindows=false

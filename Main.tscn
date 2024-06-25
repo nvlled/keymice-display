@@ -31,7 +31,7 @@ size_flags_vertical = 4
 [node name="TypedLabels" type="FlowContainer" parent="MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_horizontal = 4
 size_flags_vertical = 4
 alignment = 1
 vertical = true

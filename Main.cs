@@ -32,7 +32,7 @@ public partial class Main : Control
     private bool capslockDown = false;
     private long lastWheelFrame = 0;
 
-    private readonly Queue<KeyboardHookEventArgs> queue = new();
+    private bool editable = false;
 
     public override void _Ready()
     {
@@ -56,51 +56,13 @@ public partial class Main : Control
             var scrSize = DisplayServer.ScreenGetSize();
             var winSize = DisplayServer.WindowGetSize();
             DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X - 20, scrSize.Y - winSize.Y - 40));
-            var win = GetWindow();
-            win.Unfocusable = false;
         }).CallDeferred();
-    }
-
-    public override void _Process(double delta)
-    {
-        if (queue.TryDequeue(out KeyboardHookEventArgs e))
-        {
-            var data = e.Data;
-            var mask = SetCtrlCapsMask(e.RawEvent.Mask);
-
-            var lastChild = GetLastChild();
-            if (lastChild is not null && lastChild.keyData == data)
-            {
-                lastChild.Count += 1;
-
-                if (!IsFunctionKey(data.KeyCode)) typeAudio1.Play();
-                else typeAudio2.Play();
-            }
-            else if (!IsFunctionKey(data.KeyCode))
-            {
-                var label = _labelScene.Instantiate<TypedChar>();
-                typedLabels.AddChild(label);
-                if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
-                    label.Text = ((char)data.RawCode).ToString();
-                else
-                    label.Text = data.KeyChar.ToString();
-                label.SetModifierMask(mask);
-                label.keyData = data;
-                typeAudio1.Play();
-            }
-            else
-            {
-                var label = _labelScene.Instantiate<TypedChar>();
-                typedLabels.AddChild(label);
-                label.IsFunction = true;
-                label.Text = GetFunctionKeyText(data.KeyCode);
-                label.keyData = data;
-                label.SetModifierMask(mask, includeShift: true);
-                typeAudio2.Play();
-            }
-
-            RemoveOlderItems();
-        };
+        var win = GetWindow();
+        win.Unfocusable = true;
+        win.Borderless = true;
+        win.AlwaysOnTop = true;
+        win.Unresizable = true;
+        win.Title = "keyboard&mouse actions display";
     }
 
     private void OnMouseWheel(object sender, MouseWheelHookEventArgs e)
@@ -148,9 +110,6 @@ public partial class Main : Control
             label.SetModifierMask(mask, includeShift: true);
             typeAudio3.Play();
 
-            /*
-            // TODO: if click coordinates contains window, show border and toggle unfocusable
-            // - changing window properties doesn't seem to have any effect on linux
             var data = e.Data;
             var win = GetWindow();
             if (
@@ -158,14 +117,13 @@ public partial class Main : Control
                 data.Y > win.Position.Y && data.Y < win.Position.Y + win.Size.Y)
             {
                 GD.PrintT("window click");
-                DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.NoFocus, false);
-                DisplayServer.WindowSetFlag(DisplayServer.WindowFlags.Borderless, false);
-                win.Unfocusable = false;
-                win.Borderless = false;
-                win.AlwaysOnTop = false;
-                win.AlwaysOnTop = false;
+                editable = !editable;
+                win.Unfocusable = !editable;
+                win.Borderless = !editable;
+                win.Unresizable = !editable;
+                //win.AlwaysOnTop = !editable;
+                // TODO: add button to show settings window
             }
-            */
 
         }).CallDeferred();
     }
@@ -176,14 +134,9 @@ public partial class Main : Control
         var ch = (char)data.KeyCode;
 
         if (!char.IsControl(ch) && ch != ' ')
-            queue.Enqueue(e);
-    }
-
-    private TypedChar GetLastChild()
-    {
-        if (typedLabels.GetChildCount() == 0)
-            return null;
-        return typedLabels.GetChild(-1) as TypedChar;
+        {
+            Callable.From(() => HandleKeyEvent(e)).CallDeferred();
+        }
     }
 
     private void OnKeyPressed(object sender, KeyboardHookEventArgs e)
@@ -198,9 +151,56 @@ public partial class Main : Control
 
         if (IsFunctionKey(data.KeyCode))
         {
-            queue.Enqueue(e);
+            Callable.From(() => HandleKeyEvent(e)).CallDeferred();
         }
     }
+
+    private void HandleKeyEvent(KeyboardHookEventArgs e)
+    {
+        var data = e.Data;
+        var mask = SetCtrlCapsMask(e.RawEvent.Mask);
+
+        var lastChild = GetLastChild();
+        if (lastChild is not null && lastChild.keyData == data)
+        {
+            lastChild.Count += 1;
+
+            if (!IsFunctionKey(data.KeyCode)) typeAudio1.Play();
+            else typeAudio2.Play();
+        }
+        else if (!IsFunctionKey(data.KeyCode))
+        {
+            var label = _labelScene.Instantiate<TypedChar>();
+            typedLabels.AddChild(label);
+            if ((mask & ModifierMask.Ctrl) != 0 || (capsAsCtrl && capslockDown))
+                label.Text = ((char)data.RawCode).ToString();
+            else
+                label.Text = data.KeyChar.ToString();
+            label.SetModifierMask(mask);
+            label.keyData = data;
+            typeAudio1.Play();
+        }
+        else
+        {
+            var label = _labelScene.Instantiate<TypedChar>();
+            typedLabels.AddChild(label);
+            label.IsFunction = true;
+            label.Text = GetFunctionKeyText(data.KeyCode);
+            label.keyData = data;
+            label.SetModifierMask(mask, includeShift: true);
+            typeAudio2.Play();
+        }
+
+        RemoveOlderItems();
+    }
+
+    private TypedChar GetLastChild()
+    {
+        if (typedLabels.GetChildCount() == 0)
+            return null;
+        return typedLabels.GetChild(-1) as TypedChar;
+    }
+
 
     private bool IsFull()
     {
