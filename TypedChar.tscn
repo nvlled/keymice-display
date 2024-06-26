@@ -11,6 +11,9 @@ offset_bottom = 45.0
 theme_override_styles/panel = SubResource("StyleBoxEmpty_8xbss")
 script = ExtResource("1_4oqmd")
 
+[node name="Timer" type="Timer" parent="."]
+one_shot = true
+
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 alignment = 1

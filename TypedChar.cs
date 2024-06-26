@@ -13,6 +13,7 @@ public partial class TypedChar : PanelContainer
     [GetNode("%KeyFn")] Label _keyFn;
     [GetNode("%Icon")] TextureRect _icon;
     [GetNode("%Counter")] Label _counter;
+    [GetNode] Timer Timer;
 
 
     [Export]
@@ -59,6 +60,7 @@ public partial class TypedChar : PanelContainer
     public override void _Ready()
     {
         this.GetAnnotatedNodes();
+
         _ctrl.Visible = false;
         _alt.Visible = false;
         _shift.Visible = false;
@@ -68,9 +70,9 @@ public partial class TypedChar : PanelContainer
         _keyFn.Text = "";
         _key.Text = "";
 
-        var timer = GetTree().CreateTimer(1);
-        timer.TimeLeft = Duration;
-        timer.Timeout += OnTimeout;
+        Timer.WaitTime = Duration;
+        Timer.Timeout += OnTimeout;
+        Timer.Start();
     }
 
 

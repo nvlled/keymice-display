@@ -20,6 +20,7 @@ public partial class Main : Control
     [GetNode("TypeAudio1")] private AudioStreamPlayer2D typeAudio1;
     [GetNode("TypeAudio2")] public AudioStreamPlayer2D typeAudio2;
     [GetNode("TypeAudio3")] public AudioStreamPlayer2D typeAudio3;
+    [GetNode] public Timer Timer;
 
     public Texture2D iconMbLeft = GD.Load<Texture2D>("res://Images/mouse-left.png");
     public Texture2D iconMbRight = GD.Load<Texture2D>("res://Images/mouse-right.png");
@@ -57,6 +58,7 @@ public partial class Main : Control
             var winSize = DisplayServer.WindowGetSize();
             DisplayServer.WindowSetPosition(new Vector2I(scrSize.X - winSize.X - 20, scrSize.Y - winSize.Y - 40));
         }).CallDeferred();
+
         var win = GetWindow();
         win.Unfocusable = true;
         win.Borderless = true;
@@ -274,7 +276,7 @@ public partial class Main : Control
         for (var i = 0; IsFull() && i < 3; i++)
         {
             var child = typedLabels.GetChild(0);
-            typedLabels.RemoveChild(child);
+            child.QueueFree();
         }
     }
 
