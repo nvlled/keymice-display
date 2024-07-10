@@ -35,6 +35,8 @@ public partial class Main : Control
 
     private bool editable = false;
 
+    SynchronizationContext _uiSyncContext;
+
     public override void _Ready()
     {
         this.GetAnnotatedNodes();
@@ -42,15 +44,15 @@ public partial class Main : Control
         PhysicsServer2D.SetActive(false);
         PhysicsServer3D.SetActive(false);
 
-        var hook = new TaskPoolGlobalHook(1, GlobalHookType.All);
+        _uiSyncContext = SynchronizationContext.Current;
+
+        var hook = new SimpleGlobalHook(GlobalHookType.All);
         hook.KeyPressed += OnKeyPressed;
         hook.KeyReleased += OnKeyReleased;
         hook.KeyTyped += OnKeyTyped;
-        hook.MousePressed += OnMouseClicked;
+        hook.MouseReleased += OnMouseClicked;
         hook.MouseWheel += OnMouseWheel;
         hook.RunAsync();
-
-        GetViewport().TransparentBg = true;
 
         Callable.From(() =>
         {
@@ -79,6 +81,7 @@ public partial class Main : Control
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
+            GD.PrintT("wheel", e.Data.Direction);
             var label = _labelScene.Instantiate<TypedChar>();
             typedLabels.AddChild(label);
             label.IsFunction = true;
@@ -93,6 +96,7 @@ public partial class Main : Control
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
         Callable.From(() =>
         {
+            GD.PrintT("clicked", e.Data.Button);
             if (e.Data.Button > MB.Button5 || e.Data.Button < MB.Button1)
             {
                 return;
@@ -132,12 +136,11 @@ public partial class Main : Control
 
     private void OnKeyTyped(object sender, KeyboardHookEventArgs e)
     {
-        var data = e.Data;
-        var ch = (char)data.KeyCode;
+        var ch = (char)e.Data.KeyCode;
 
         if (!char.IsControl(ch) && ch != ' ')
         {
-            Callable.From(() => HandleKeyEvent(e)).CallDeferred();
+            _uiSyncContext.Send(HandleKeyEvent, e);
         }
     }
 
@@ -153,12 +156,17 @@ public partial class Main : Control
 
         if (IsFunctionKey(data.KeyCode))
         {
-            Callable.From(() => HandleKeyEvent(e)).CallDeferred();
+            _uiSyncContext.Send(HandleKeyEvent, e);
         }
     }
 
-    private void HandleKeyEvent(KeyboardHookEventArgs e)
+    private void HandleKeyEvent(object obj)
     {
+        var e = obj as KeyboardHookEventArgs;
+        if (e is null) return;
+
+        GD.PrintT("key", e.Data.KeyCode);
+
         var data = e.Data;
         var mask = SetCtrlCapsMask(e.RawEvent.Mask);
 
