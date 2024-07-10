@@ -10,7 +10,7 @@
     <OptimizationPreference>Size</OptimizationPreference>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SharpHook" Version="5.3.6" />
+    <PackageReference Include="SharpHook" Version="5.3.7" />
     <TrimmerRootAssembly Include="GodotSharp" />
     <TrimmerRootAssembly Include="$(TargetName)" />
   </ItemGroup>

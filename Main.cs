@@ -1,17 +1,17 @@
 using System;
-using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using godot_getnode;
 using SharpHook;
 using SharpHook.Native;
 using MB = SharpHook.Native.MouseButton;
-
+using SynchronizationContext = System.Threading.SynchronizationContext;
+using Timer = Godot.Timer;
 
 // TODO: ctrl+num doesn't work on widows
 // TODO: passthrough also doesn't work
 //
-// TODO: review and audit SharpHook
 // TODO: settings window
 
 public partial class Main : Control
